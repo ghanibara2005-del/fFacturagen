@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { ah, httpError } from '../http.js'
+import { normalizeClient, validateClient } from '../../shared/clientValidation.js'
 
 const router = Router()
 const FIELDS = ['name', 'company', 'email', 'phone', 'address', 'nif', 'rc']
@@ -8,7 +9,11 @@ const FIELDS = ['name', 'company', 'email', 'phone', 'address', 'nif', 'rc']
 function pick(body) {
   const data = {}
   for (const field of FIELDS) data[field] = String(body?.[field] ?? '').trim()
-  if (!data.name) throw httpError(400, 'Le nom du client est obligatoire')
+  const { email, nif } = normalizeClient(data)
+  data.email = email
+  data.nif = nif
+  const message = Object.values(validateClient(data))[0]
+  if (message) throw httpError(400, message)
   return data
 }
 

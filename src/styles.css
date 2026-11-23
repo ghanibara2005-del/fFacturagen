@@ -467,6 +467,16 @@ tbody tr:hover {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.input.invalid {
+  border-color: #fecdca;
+  background: #fffbfa;
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
 .input-inline {
   width: auto;
   min-width: 190px;

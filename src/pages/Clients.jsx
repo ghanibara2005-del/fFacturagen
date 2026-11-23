@@ -4,6 +4,7 @@ import PageHead from '../components/PageHead.jsx'
 import ErrorNote from '../components/ErrorNote.jsx'
 import Modal from '../components/Modal.jsx'
 import { api } from '../lib/api.js'
+import { validateClient } from '../../shared/clientValidation.js'
 
 const EMPTY = { name: '', company: '', email: '', phone: '', address: '', nif: '', rc: '' }
 
@@ -13,6 +14,7 @@ export default function Clients() {
   const [error, setError] = useState('')
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({})
 
   useEffect(() => {
     api.clients
@@ -24,10 +26,12 @@ export default function Clients() {
 
   const openNew = () => {
     setError('')
+    setFieldErrors({})
     setForm({ ...EMPTY, id: null })
   }
   const openEdit = (client) => {
     setError('')
+    setFieldErrors({})
     setForm({
       id: client.id,
       name: client.name,
@@ -40,9 +44,17 @@ export default function Clients() {
     })
   }
 
+  const update = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }))
+    setFieldErrors((current) => (current[field] ? { ...current, [field]: '' } : current))
+  }
+
   const save = async (event) => {
     event.preventDefault()
     setError('')
+    const errors = validateClient(form)
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
     try {
       const { id, ...data } = form
       if (id) {
@@ -159,16 +171,18 @@ export default function Clients() {
             </>
           }
         >
-          <form id="client-form" className="form-grid" onSubmit={save}>
+          <form id="client-form" className="form-grid" onSubmit={save} noValidate>
             <div className="field">
               <label htmlFor="client-name">Nom</label>
               <input
                 id="client-name"
-                className="input"
+                className={`input${fieldErrors.name ? ' invalid' : ''}`}
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => update('name', e.target.value)}
+                aria-invalid={Boolean(fieldErrors.name)}
                 required
               />
+              {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
             </div>
             <div className="field">
               <label htmlFor="client-company">Société</label>
@@ -184,10 +198,12 @@ export default function Clients() {
               <input
                 id="client-email"
                 type="email"
-                className="input"
+                className={`input${fieldErrors.email ? ' invalid' : ''}`}
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => update('email', e.target.value)}
+                aria-invalid={Boolean(fieldErrors.email)}
               />
+              {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
             </div>
             <div className="field">
               <label htmlFor="client-phone">Téléphone</label>
@@ -211,10 +227,13 @@ export default function Clients() {
               <label htmlFor="client-nif">NIF</label>
               <input
                 id="client-nif"
-                className="input"
+                className={`input${fieldErrors.nif ? ' invalid' : ''}`}
                 value={form.nif}
-                onChange={(e) => setForm({ ...form, nif: e.target.value })}
+                onChange={(e) => update('nif', e.target.value)}
+                aria-invalid={Boolean(fieldErrors.nif)}
+                inputMode="numeric"
               />
+              {fieldErrors.nif && <span className="field-error">{fieldErrors.nif}</span>}
             </div>
             <div className="field">
               <label htmlFor="client-rc">RC</label>
