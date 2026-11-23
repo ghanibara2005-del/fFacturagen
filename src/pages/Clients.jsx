@@ -4,7 +4,7 @@ import PageHead from '../components/PageHead.jsx'
 import ErrorNote from '../components/ErrorNote.jsx'
 import Modal from '../components/Modal.jsx'
 import { api } from '../lib/api.js'
-import { validateClient } from '../../shared/clientValidation.js'
+import { clientPayload, validateClient } from '../../shared/clientValidation.js'
 
 const EMPTY = { name: '', company: '', email: '', phone: '', address: '', nif: '', rc: '' }
 
@@ -56,10 +56,10 @@ export default function Clients() {
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
     try {
-      const { id, ...data } = form
-      if (id) {
-        const updated = await api.clients.update(id, data)
-        setClients((list) => list.map((client) => (client.id === id ? { ...client, ...updated } : client)))
+      const data = clientPayload(form)
+      if (form.id) {
+        const updated = await api.clients.update(form.id, data)
+        setClients((list) => list.map((client) => (client.id === form.id ? { ...client, ...updated } : client)))
       } else {
         const created = await api.clients.create(data)
         setClients((list) => [...list, { ...created, invoice_count: 0 }].sort((a, b) => a.name.localeCompare(b.name)))

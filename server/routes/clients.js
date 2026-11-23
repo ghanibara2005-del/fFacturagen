@@ -1,17 +1,12 @@
 import { Router } from 'express'
 import { pool } from '../db.js'
 import { ah, httpError } from '../http.js'
-import { normalizeClient, validateClient } from '../../shared/clientValidation.js'
+import { CLIENT_FIELDS, clientPayload, validateClient } from '../../shared/clientValidation.js'
 
 const router = Router()
-const FIELDS = ['name', 'company', 'email', 'phone', 'address', 'nif', 'rc']
 
 function pick(body) {
-  const data = {}
-  for (const field of FIELDS) data[field] = String(body?.[field] ?? '').trim()
-  const { email, nif } = normalizeClient(data)
-  data.email = email
-  data.nif = nif
+  const data = clientPayload(body)
   const message = Object.values(validateClient(data))[0]
   if (message) throw httpError(400, message)
   return data
@@ -37,7 +32,7 @@ router.post(
     const { rows } = await pool.query(
       `insert into clients (name, company, email, phone, address, nif, rc)
        values ($1,$2,$3,$4,$5,$6,$7) returning *`,
-      FIELDS.map((field) => data[field])
+      CLIENT_FIELDS.map((field) => data[field])
     )
     res.status(201).json(rows[0])
   })
@@ -50,7 +45,7 @@ router.put(
     const { rows } = await pool.query(
       `update clients set name=$1, company=$2, email=$3, phone=$4, address=$5, nif=$6, rc=$7
        where id=$8 returning *`,
-      [...FIELDS.map((field) => data[field]), req.params.id]
+      [...CLIENT_FIELDS.map((field) => data[field]), req.params.id]
     )
     if (!rows[0]) throw httpError(404, 'Client introuvable')
     res.json(rows[0])
